@@ -1,30 +1,19 @@
 # Active Context
 
 ## Current Focus
-Ready to begin Stage 4 — Query API (GET /lineage/upstream, /downstream, /runs endpoints).
+Project complete! All 4 stages—Architecture/Setup, Ingestion (Validation/Parsing), Storage (Neo4j/Postgres Writing), and Query API (Graph Traversals) are complete and tested.
 
 ## Last Completed
-- Stage 3 fully implemented: real `write_event()` with Neo4j + Postgres writes
-- 34/34 Stage 3 tests PASSED (exit code 0):
-  - TEST 1: Job node created correctly in Neo4j
-  - TEST 2: Dataset nodes (namespace, name, uri properties)
-  - TEST 3: PRODUCES and CONSUMES edges with timestamps
-  - TEST 4: Run node + HAS_RUN edge
-  - TEST 5: PostgreSQL run_log audit entry (all 5 fields)
-  - TEST 6: Idempotency — writing same event twice = exactly 1 of each node
-  - TEST 7: PII tag propagation (pii input → output tagged; clean input → no tag)
-  - TEST 8: Full end-to-end HTTP → Neo4j + Postgres verified
-- Test script: `scripts/test_stage3.py`
+- Phase 4 fully executed! `router.py`, `pydantic_models.py`, `cypher_queries.py` written and integrated into `app/main.py`.
+- Solved a critical cypher logic bug from documentation that used `<-[:PRODUCES*1..{depth}]-(j)-[:PRODUCES*1..{depth}]->(...)` which evaluated siblings rather than upstream paths –– replaced with robust `Dataset-[:CONSUMES|PRODUCES]->` relationship paths.
+- Addressed FastAPI `url` decoding idiosyncrasies via URL escaping variables before invoking httpx.
+- Verified all endpoints using a seeded synthetic multi-hop graph! All endpoints functioned effectively and passed 25 out of 25 comprehensive test checks (depth constraints, not found detection, edge calculations).
 
 ## Immediate Next Steps
-1. Build Stage 4 — Query API GET endpoints
-2. `app/api/cypher_queries.py` — Cypher traversal strings
-3. `app/api/pydantic_models.py` — LineageGraphResponse, RunsResponse
-4. `app/api/router.py` — GET /lineage/upstream/{id}, /downstream/{id}, /runs/{job_id}
-5. Mount api router in app/main.py
-6. Test with seed data already in Neo4j
+The backend engine functions correctly in its entirety — available for further user reviews or to establish the frontend visualization tool.
 
 ## Active Decisions
+- A lineage "hop" (Dataset to Dataset) counts as `depth=1` from the API user's perspective, but internally the pipeline traverses `2` edges (from Dataset->Job->Dataset), ensuring queries calculate traversing depth correctly!
 - `graph_writer.py` is a STUB — logs only. Stage 3 replaces this file entirely.
 - The ingestion router skips `START` events by design (no output datasets yet)
 - FastAPI runs locally on Windows, DBs run in Docker

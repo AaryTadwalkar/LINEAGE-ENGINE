@@ -79,9 +79,28 @@ Test script: `scripts/test_stage3.py`
 
 ---
 
-## Stage 4 — Query API ❌ NOT STARTED
-- `app/api/router.py` — GET upstream/downstream/runs endpoints
-- `app/api/cypher_queries.py` — Cypher strings
+## Stage 4 — Query API ✅ COMPLETE
+
+### What Was Built
+- `app/api/pydantic_models.py` — Schema definition for `NodeModel`, `EdgeModel`, `LineageGraphResponse`, and `RunsResponse`
+- `app/api/cypher_queries.py` — Raw query string extraction
+- `app/api/router.py` — The query router logic exposing `GET /lineage/upstream/{dataset_id}`, `GET /lineage/downstream/{dataset_id}`, and `GET /lineage/runs/{job_id}`
+- Corrected Cypher variable-length paths (`<-[:CONSUMES|PRODUCES*1..depth]-(node)`) properly mapped to exact graph edge traversal patterns (multiplying user hops by 2 to account for Dataset-Job-Dataset links).
+
+### Integration Testing ✅
+- Built `test_stage4.py` script
+- Seeded a mock graph:
+  ```text
+  raw.users ──> j1 ──> staging.users ──┐
+                                       ├──> j3 ──> clean.purchases ──> j4 ──> reporting.dashboard
+  raw.orders ─> j2 ──> staging.orders ─┘
+  ```
+- **Verified:**
+  - Upstream endpoint accurately traverses all backwards dependencies (properly retrieving 10 nodes for `reporting.dashboard`).
+  - Downstream endpoint correctly identifies only proper downstream linkages without polluting cross-parent branches.
+  - Depth limiting bounds traversals correctly (e.g. depth=1 yields exactly 3 interconnected sub-graph nodes).
+  - PostgreSQL jobs history endpoints function as planned.
+  - Test suite passes with `25/25` pass rate (exit code 0).
 
 ---
 

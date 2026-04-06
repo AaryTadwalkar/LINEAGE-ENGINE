@@ -4,6 +4,7 @@ load_dotenv()
 
 from fastapi import FastAPI
 from app.ingestion.router import router as ingestion_router
+from app.api.router import router as query_router
 
 app = FastAPI(
     title="Metadata Lineage Engine",
@@ -12,6 +13,7 @@ app = FastAPI(
 )
 
 app.include_router(ingestion_router)
+app.include_router(query_router)
 
 
 @app.get("/health", tags=["system"])
