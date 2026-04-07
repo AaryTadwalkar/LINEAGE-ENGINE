@@ -11,6 +11,8 @@ Project complete! All 4 stages—Architecture/Setup, Ingestion (Validation/Parsi
 
 ## Immediate Next Steps
 The backend engine functions correctly in its entirety — available for further user reviews or to establish the frontend visualization tool.
+- Prepared `scripts/seed_dummy_data.py` to allow manual testing of Path A (OpenLineage REST API events).
+- Wrote educational documentation `docs/learning_lineage_testing.md` exploring how we simulate pipeline data without a real orchestrator.
 
 ## Active Decisions
 - A lineage "hop" (Dataset to Dataset) counts as `depth=1` from the API user's perspective, but internally the pipeline traverses `2` edges (from Dataset->Job->Dataset), ensuring queries calculate traversing depth correctly!
