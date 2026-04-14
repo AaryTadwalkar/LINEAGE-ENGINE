@@ -1,17 +1,27 @@
 # Active Context
 
 ## Current Focus
-Stage 2 (Week 2 Dashboard) has been completely built. A brand-new Vite+React workspace has been scaffolded under `/frontend/`, featuring dynamic DAG graphs mapping the REST node paths from `FastAPI`. 
+All critical bugs are fixed. System should now show live-updating graph with proper edge labels.
 
 ## Last Completed
-- Provisioned `React Flow` mapping with `dagre` LR traversals via Axios requests to `localhost:8000`.
-- Built custom components styled natively using `TailwindCSS` with dark-mode Glassmorphism arrays (glowy nodes, interactive popovers).
-- Implemented `SearchBar`, `LineageGraph`, `NodeSidePanel` and `RunsPanel`.
-- Verified API CORS handshaking effectively returning datasets (jobs, lineage links, runs, output pipelines).
+- **Bug fix**: `/lineage/runs/global` route moved BEFORE `/runs/{job_id:path}` — FastAPI was treating "global" as a job_id.
+- **Bug fix**: Edge duplicate keys resolved — now use `source-type-target` key with index fallback.
+- **Feature**: Edge labels added — PRODUCES (green), CONSUMES (orange) with color-coded arrows.
+- **Feature**: GraphView now auto-polls every 4 seconds silently — graph grows live as simulator emits events.
+- **Feature**: Upstream/Downstream explanation panel added to the workbench empty state.
+- **Fix**: `datetime.utcnow()` deprecation replaced with `datetime.now(timezone.utc)`.
 
 ## Immediate Next Steps
-- Review frontend visualization with user at `http://localhost:5173`.
-- Address any further dynamic aesthetic changes!
+- Stop old terminal, run `python run_live_demo.py` fresh.
+- Click "Try Simulator Default Pipeline" — watch graph build node-by-node every 4 seconds.
+
+## Immediate Next Steps
+- Run `python run_live_demo.py` from a fresh terminal.
+- After simulation completes (~15s), click 'Try Demo Pipeline' on the dashboard — the full Jaffle Shop DAG should appear.
+
+## Immediate Next Steps
+- Execute `python run_live_demo.py` locally and ensure aesthetic alignment with the simulated graph pipeline!
+- Continue testing Neo4j queries under live stress conditions.
 
 ## Active Decisions
 - A lineage "hop" (Dataset to Dataset) counts as `depth=1` from the API user's perspective, but internally the pipeline traverses `2` edges (from Dataset->Job->Dataset), ensuring queries calculate traversing depth correctly!

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
-from app.api.pydantic_models import LineageGraphResponse, RunsResponse, NodeModel, EdgeModel, RunRecord
+from app.api.pydantic_models import LineageGraphResponse, RunsResponse, NodeModel, EdgeModel, RunRecord, DatasetsResponse, GlobalRunsResponse, DatasetRecord
 from app.db_client import get_neo4j_driver, get_postgres_conn
 import logging
 
@@ -131,13 +131,51 @@ def get_downstream(
     )
 
 
+# IMPORTANT: /runs/global MUST be defined BEFORE /runs/{job_id:path}
+# otherwise FastAPI matches the string "global" as a job_id.
+@router.get("/runs/global", response_model=list[dict])
+def get_global_runs(limit: int = Query(default=100, ge=1, le=500)):
+    """
+    Returns the most recent pipeline runs across ALL jobs (global audit view).
+    """
+    try:
+        conn = get_postgres_conn()
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT run_id, job_name, status, start_time, end_time,
+                       input_datasets, output_datasets
+                FROM run_log
+                ORDER BY start_time DESC
+                LIMIT %s
+                """,
+                (limit,),
+            )
+            rows = cur.fetchall()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Postgres global runs query failed: {e}")
+        raise HTTPException(status_code=500, detail="Database query failed")
+
+    return [
+        {
+            "run_id": str(row[0]),
+            "job_name": row[1],
+            "status": row[2],
+            "start_time": row[3].isoformat() if row[3] else None,
+            "end_time": row[4].isoformat() if row[4] else None,
+            "input_datasets": row[5] or [],
+            "output_datasets": row[6] or [],
+        }
+        for row in rows
+    ]
+
+
 @router.get("/runs/{job_id:path}", response_model=RunsResponse)
 def get_runs(job_id: str, limit: int = Query(default=50, ge=1, le=500)):
     """
     Returns the run history of a specific job from PostgreSQL.
     Returns empty list (not 404) if the job has no recorded runs.
-
-    job_id: The job name, e.g. "orders_pipeline.transform_step"
     """
     try:
         conn = get_postgres_conn()
@@ -171,5 +209,17 @@ def get_runs(job_id: str, limit: int = Query(default=50, ge=1, le=500)):
         )
         for row in rows
     ]
-
     return RunsResponse(job_id=job_id, run_count=len(runs), runs=runs)
+
+
+@router.get("/datasets", response_model=list[dict])
+def get_datasets():
+    """
+    Returns a list of all datasets available in the graph.
+    """
+    driver = get_neo4j_driver()
+    with driver.session() as session:
+        result = session.run(
+            "MATCH (d:Dataset) RETURN d.uri AS uri, d.namespace AS namespace, d.name AS name LIMIT 1000"
+        )
+        return [{"uri": r["uri"], "namespace": r["namespace"], "name": r["name"]} for r in result]

@@ -20,3 +20,13 @@ export const getRuns = async (jobId) => {
   const res = await API.get(`/lineage/runs/${encodeURIComponent(jobId)}`);
   return res.data;
 };
+
+export const getDatasets = async () => {
+  const res = await API.get('/lineage/datasets');
+  return res.data;
+};
+
+export const getGlobalRuns = async (limit = 100) => {
+  const res = await API.get('/lineage/runs/global', { params: { limit } });
+  return res.data;
+};

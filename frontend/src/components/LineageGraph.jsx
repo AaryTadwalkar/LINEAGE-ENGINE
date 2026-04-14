@@ -16,29 +16,52 @@ export const LineageGraph = ({ nodes, edges, onNodeClick }) => {
   const [rfEdges, setEdges, onEdgesChange] = useEdgesState([]);
 
   useEffect(() => {
-    // Add default React Flow shapes to our API nodes
     const formattedNodes = nodes.map(n => ({
       id: String(n.id),
-      type: n.label, // 'Job' or 'Dataset'
+      type: n.label,    // 'Job' or 'Dataset'
       data: { ...n.properties, label: n.label },
       position: { x: 0, y: 0 },
     }));
 
-    // Format edges
-    const formattedEdges = edges.map(e => ({
-      id: `${e.source_id}-${e.target_id}`,
-      source: String(e.source_id),
-      target: String(e.target_id),
-      type: 'smoothstep',
-      animated: true,
-      style: { stroke: 'rgba(255, 255, 255, 0.4)', strokeWidth: 2 },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: 'rgba(255, 255, 255, 0.6)',
-      },
-    }));
+    // Track seen edge keys to prevent duplicates caused by multi-path traversal
+    const seenEdgeKeys = new Set();
+    const formattedEdges = [];
 
-    // Apply layout
+    edges.forEach((e, idx) => {
+      const baseKey = `${e.source_id}-${e.type}-${e.target_id}`;
+      // If we've seen this exact relationship before, make the key unique with index
+      const key = seenEdgeKeys.has(baseKey) ? `${baseKey}-${idx}` : baseKey;
+      seenEdgeKeys.add(baseKey);
+
+      const isProduces = e.type === 'PRODUCES';
+      formattedEdges.push({
+        id: key,
+        source: String(e.source_id),
+        target: String(e.target_id),
+        type: 'smoothstep',
+        animated: true,
+        label: e.type,              // Shows PRODUCES or CONSUMES on the edge
+        labelStyle: {
+          fill: isProduces ? '#34d399' : '#fb923c',
+          fontWeight: 600,
+          fontSize: 10,
+          fontFamily: 'Inter, sans-serif',
+        },
+        labelBgStyle: {
+          fill: 'rgba(0,0,0,0.5)',
+          rx: 4,
+        },
+        style: {
+          stroke: isProduces ? 'rgba(52,211,153,0.5)' : 'rgba(251,146,60,0.5)',
+          strokeWidth: 2,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: isProduces ? '#34d399' : '#fb923c',
+        },
+      });
+    });
+
     const layouted = getLayoutedElements(formattedNodes, formattedEdges);
     setNodes([...layouted.nodes]);
     setEdges([...layouted.edges]);
@@ -47,7 +70,6 @@ export const LineageGraph = ({ nodes, edges, onNodeClick }) => {
   }, [nodes, edges]);
 
   const handleNodeClick = useCallback((event, node) => {
-    // Find original node structure from props to pass to sidepanel
     const originalNode = nodes.find(n => String(n.id) === node.id);
     if (originalNode && onNodeClick) {
       onNodeClick(originalNode);
@@ -69,18 +91,19 @@ export const LineageGraph = ({ nodes, edges, onNodeClick }) => {
         onPaneClick={handlePaneClick}
         nodeTypes={nodeTypes}
         fitView
+        fitViewOptions={{ padding: 0.15 }}
         attributionPosition="bottom-left"
-        minZoom={0.1}
+        minZoom={0.05}
         maxZoom={1.5}
       >
-        <Background gap={24} size={2} color="#ffffff" style={{ opacity: 0.05 }} />
+        <Background gap={24} size={1.5} color="#ffffff" style={{ opacity: 0.04 }} />
         <Controls 
           className="bg-black/50 border border-white/10 rounded-lg overflow-hidden backdrop-blur" 
           showInteractive={false}
         />
         <MiniMap 
           nodeColor={(n) => n.type === 'Dataset' ? '#3B82F6' : '#F97316'}
-          maskColor="rgba(0,0,0, 0.8)"
+          maskColor="rgba(0,0,0,0.8)"
           className="bg-black/50 border border-white/10 rounded-lg overflow-hidden backdrop-blur-md"
         />
       </ReactFlow>

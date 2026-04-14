@@ -45,3 +45,16 @@ class RunsResponse(BaseModel):
     job_id: str
     run_count: int
     runs: list[RunRecord]
+
+class DatasetRecord(BaseModel):
+    uri: str
+    namespace: str
+    name: str
+
+class DatasetsResponse(BaseModel):
+    dataset_count: int
+    datasets: list[DatasetRecord]
+
+class GlobalRunsResponse(BaseModel):
+    run_count: int
+    runs: list[RunRecord]
