@@ -1,6 +1,6 @@
 /docs_temp
 ./pytest_cache
 ./.venv
-
+__pycache__/
 # Ignore AI Agent Memory Bank
 memory-bank/
