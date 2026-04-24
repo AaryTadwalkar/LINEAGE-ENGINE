@@ -128,35 +128,6 @@ def _wait_for_port(host: str, port: int, label: str, timeout_seconds=90):
     return False
 
 
-def _wait_for_docker_healthy(container_name: str, timeout_seconds=180):
-    """
-    Poll `docker inspect` until the container's Health.Status is 'healthy'.
-    This reuses Docker's own healthcheck (cypher-shell, pg_isready, etc.)
-    instead of re-implementing them in Python. Far more reliable than TCP probes.
-    """
-    print(f"[ORCHESTRATOR] Waiting for {container_name} to be healthy (up to {timeout_seconds}s)...", flush=True)
-    deadline = time.time() + timeout_seconds
-    while time.time() < deadline:
-        try:
-            result = subprocess.run(
-                ["docker", "inspect", "--format", "{{.State.Health.Status}}", container_name],
-                capture_output=True, text=True, timeout=5
-            )
-            status = result.stdout.strip()
-            if status == "healthy":
-                print(f"[ORCHESTRATOR] ✅ {container_name} is healthy.")
-                return True
-            elif status in ("starting", "unhealthy", ""):
-                print(f"[ORCHESTRATOR] ⏳ {container_name}: {status or 'waiting'}...   ", end='\r', flush=True)
-            else:
-                # Container not found
-                return False
-        except Exception:
-            pass
-        time.sleep(3)
-    print(f"\n[ORCHESTRATOR] ❌ {container_name} never became healthy.")
-    return False
-
 
 def _wait_for_api(timeout_seconds=120):
     """Poll the API health endpoint until it responds or timeout."""
@@ -224,22 +195,7 @@ def main():
     print("--> [1/5] Starting databases (Docker)...")
     subprocess.run("docker compose up -d", cwd=ROOT_DIR, shell=True,
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print("           Docker compose started.")
-
-    # Wait for Docker containers to be "healthy" per their own healthchecks.
-    # Docker runs cypher-shell inside neo4j to confirm Bolt is truly ready.
-    # This is far more reliable than a raw TCP port check.
-    if not _wait_for_docker_healthy("lineage-engine-neo4j-1", timeout_seconds=180):
-        # Fallback to container name without project prefix
-        if not _wait_for_docker_healthy("lineage-engine_neo4j_1", timeout_seconds=10):
-            print("[ABORT] Neo4j never became healthy. Run: docker compose logs neo4j")
-            sys.exit(1)
-
-    if not _wait_for_docker_healthy("lineage-engine-postgres-1", timeout_seconds=60):
-        if not _wait_for_docker_healthy("lineage-engine_postgres_1", timeout_seconds=10):
-            print("[ABORT] PostgreSQL never became healthy. Run: docker compose logs postgres")
-            sys.exit(1)
-    print()
+    print("           Docker compose started.\n")
 
     # 2. FastAPI backend
     print("--> [2/5] Starting FastAPI backend (port 8000)...")

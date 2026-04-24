@@ -90,7 +90,8 @@ PIPELINE_JOBS = [
 ]
 
 # ── Default Search URI for the Dashboard ─────────────────────────────────────
-# This is what the "Try Demo" button in the React dashboard will search for.
-# We use the raw input and search downstream so the user can watch the graph grow live!
-DEFAULT_SEARCH_URI = f"{NAMESPACE}/raw_customers"
-DEFAULT_SEARCH_DIRECTION = "downstream"
+# Searching UPSTREAM from the final "customers" mart reveals all 3 raw source
+# branches (raw_customers, raw_orders, raw_payments) converging through their
+# staging layers — this is the full Jaffle Shop fan-in graph.
+DEFAULT_SEARCH_URI = f"{NAMESPACE}/customers"
+DEFAULT_SEARCH_DIRECTION = "upstream"
