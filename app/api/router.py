@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from app.api.pydantic_models import LineageGraphResponse, RunsResponse, NodeModel, EdgeModel, RunRecord, DatasetsResponse, GlobalRunsResponse, DatasetRecord, ImpactResponse
 from app.db_client import get_neo4j_driver, get_postgres_conn
 import logging
+from app.storage.graph_writer import propagate_pii_retroactive
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/lineage", tags=["query"])
@@ -268,3 +269,16 @@ def get_datasets():
             "MATCH (d:Dataset) RETURN d.uri AS uri, d.namespace AS namespace, d.name AS name LIMIT 1000"
         )
         return [{"uri": r["uri"], "namespace": r["namespace"], "name": r["name"]} for r in result]
+
+
+@router.post("/admin/propagate-pii")
+def trigger_pii_propagation():
+    """
+    Triggers retroactive multi-hop PII propagation.
+    """
+    try:
+        updated_count = propagate_pii_retroactive()
+        return {"status": "success", "datasets_updated": updated_count}
+    except Exception as e:
+        logger.error(f"PII propagation failed: {e}")
+        raise HTTPException(status_code=500, detail="PII propagation failed")
