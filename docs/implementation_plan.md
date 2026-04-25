@@ -17,6 +17,13 @@
 | Stage 3 — Storage | Neo4j MERGE writes, Postgres audit log, PII propagation | ✅ All present, 34 tests pass | ✅ DONE |
 | Stage 4 — Query API | upstream, downstream, runs, datasets | ✅ Endpoints exist, 25 tests pass | ✅ DONE |
 | Stage 5 — Frontend | React + ReactFlow + Dagre dashboard | ✅ Built and running | ✅ DONE |
+| Fix-0 — UI Nav Bug | Fix 404s on Upstream/Downstream buttons | ✅ Endpoints take URIs natively | ✅ DONE |
+| Stage 6 — Neo4j DB | Auto-apply constraints on FastAPI boot | ✅ Added to app/main.py startup | ✅ DONE |
+| Stage 7 — Impact Analysis | API + UI to show downstream breakage | ✅ API & UI fully integrated | ✅ DONE |
+| Stage 8 — PII Tags | Multi-hop retroactive graph propagation | ✅ Admin API + Sidebar UI built | ✅ DONE |
+| Stage 9 — Airflow | Native OpenLineage Airflow integration | ✅ DAG added, Docker setup fixed | ✅ DONE |
+| Stage 10 — Column-Level | Parse column facets, update UI/Graph | ⏳ Planning phase required | ⏳ PENDING |
+| Stage 11 — AI Chatbot | RAG based natural language query module | ⏳ Planning phase required | ⏳ PENDING |
 
 ### 🔴 Known Broken Thing You Reported: Upstream / Downstream Not Working
 

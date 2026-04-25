@@ -617,17 +617,33 @@ python scripts/test_stage4.py   # 25 tests: query API
 - Side panels: node properties, PII badges, run history table
 - `run_live_demo.py` + `pipeline_plugin.py` — one-command demo orchestrator
 
+### Fix-0 — UI Nav Bug ✅ COMPLETE
+- Fixed `encodeURIComponent` bug causing 404s on Upstream/Downstream buttons
+- Replaced Neo4j `element_id` with `dataset_uri` in `NodeSidePanel.jsx`
+
+### Stage 6 — Neo4j Constraint Automation ✅ COMPLETE
+- Auto-apply constraints on FastAPI boot via `@app.on_event("startup")`
+
+### Stage 7 — Impact Analysis ✅ COMPLETE
+- Built API `GET /lineage/impact/{dataset_uri}` using N-hop Cypher traversal
+- Integrated into React UI via "Check Impact" button with severity scores
+
+### Stage 8 — Multi-Hop PII Propagation ✅ COMPLETE
+- Added `POST /lineage/admin/propagate-pii`
+- Built retroactive `*1..20` Cypher propagation query
+- Added Admin Sidebar button in React UI
+
+### Stage 9 — Airflow Integration ✅ COMPLETE
+- Wrote `airflow_dags/sample_lineage_dag.py`
+- Setup OpenLineage provider & fixed `/api/v1/lineage` standard endpoint support
+- Resolved Docker Compose executor, port collision, and tty issues
+
 ---
 
 ## 14. What Is Still To Build
 
 | Item | Notes |
 |---|---|
-| Multi-hop retroactive PII propagation | Currently only 1-hop at write time |
-| Airflow integration test | docker-compose.yml has Airflow service defined but untested |
-| Neo4j constraint automation | Currently applied manually in Neo4j browser |
-| Real Airflow DAG plugin | `airflow_dags/` folder exists, to be completed |
-| Impact analysis endpoint | "Which jobs break if I change this schema?" |
 | Column-level lineage | Currently table-level only |
 | OpenLineage facet parsing | Column-level PII flags from Airflow facets |
 | RAG Answer Generation module | AI module on top of lineage graph — Stage E in progress |

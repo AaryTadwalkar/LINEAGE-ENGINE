@@ -5,10 +5,11 @@ from app.storage.graph_writer import write_event
 import logging
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/lineage", tags=["ingestion"])
+router = APIRouter(tags=["ingestion"])
 
 
-@router.post("/events", status_code=200)
+@router.post("/lineage/events", status_code=200)
+@router.post("/api/v1/lineage", status_code=200)
 def ingest_event(event: OLRunEvent):
     """
     Receives an OpenLineage event from Airflow or any OL-compatible source.

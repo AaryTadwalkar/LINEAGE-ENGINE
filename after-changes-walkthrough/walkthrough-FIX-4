@@ -1,0 +1,50 @@
+# Walkthrough: Stage 9 - Airflow Integration (Live Test)
+
+As requested, here is a breakdown of what was implemented to verify that the Lineage Engine seamlessly integrates with Apache Airflow using the OpenLineage standard.
+
+## 1. What was the problem?
+
+Our Lineage Engine was built to accept OpenLineage HTTP requests. However, we had only been testing it using our own Python simulator script (`run_live_demo.py`). To prove that the engine is production-ready, we needed to show that a real, industry-standard orchestration tool like Apache Airflow can natively emit events to our engine without us having to write custom Airflow plugins.
+
+## 2. The Solution & Root Cause Analysis
+
+To accomplish this, we needed to stand up an actual Airflow instance, write a real DAG (Directed Acyclic Graph) pipeline, and configure Airflow's built-in OpenLineage provider to talk to our FastAPI backend.
+
+### The Fix:
+
+#### Change 1: Adding Airflow to Docker Compose (`docker-compose.yml`)
+We updated `docker-compose.yml` to include a standalone Airflow container. 
+- **Image:** `apache/airflow:2.8.1-python3.10`
+- **Executor:** We set it to `LocalExecutor` so it runs natively in one container without needing Celery/Redis.
+- **Provider:** We used Airflow's `_PIP_ADDITIONAL_REQUIREMENTS` feature to auto-install `apache-airflow-providers-openlineage` on startup.
+- **Connection:** We injected the `OPENLINEAGE_URL=http://host.docker.internal:8000` environment variable so Airflow knows exactly where to send the lineage events (our FastAPI server running on your host machine).
+
+#### Change 2: Writing a Real Airflow DAG (`airflow_dags/sample_lineage_dag.py`)
+We created the `airflow_dags/` folder and wrote a real pipeline. 
+The DAG contains two simple Bash tasks: `extract_data` and `transform_data`.
+To tell OpenLineage what data is being touched, we utilized Airflow 2.4+ native `Dataset` objects. By simply defining `inlets=[Dataset("postgres://demo_db/raw.source")]` and `outlets` on our Airflow tasks, the OpenLineage provider automatically parses these and fires the JSON events to our engine!
+
+#### Change 3: FastAPI Standard Endpoint Mapping (`router.py`)
+While testing, we discovered that Airflow's OpenLineage provider strictly sends HTTP POST requests to `/api/v1/lineage` (the industry standard). Our backend was only listening on `/lineage/events`. We modified `app/ingestion/router.py` to seamlessly accept payloads on both endpoints by adding `@router.post("/api/v1/lineage")`.
+
+#### Change 4: Docker Configuration Troubleshooting
+During live testing, we hit three minor Docker issues that we successfully resolved:
+1. **Executor Conflict**: We originally used `LocalExecutor` for Airflow, but that requires Postgres. Since we used the default SQLite, it crashed. We switched it to `SequentialExecutor`.
+2. **Container Exiting**: The `standalone` command failed to maintain an interactive session in Docker Compose, so we added `tty: true` and `stdin_open: true` to keep it alive.
+3. **Port Collision**: Another local container was stealing port `8080`, so we remapped our Airflow UI to use `8081`.
+
+## 3. How we tackled it
+
+1.  **Modified `docker-compose.yml`**: Added the Airflow service, set `SequentialExecutor`, fixed ports to `8081:8080`, and added OpenLineage environment variables.
+2.  **Created `airflow_dags/sample_lineage_dag.py`**: Built a 2-step data pipeline using Airflow `Dataset` definitions.
+3.  **Updated `app/ingestion/router.py`**: Mapped the official `/api/v1/lineage` URL to our ingestion logic.
+
+## Next Steps
+
+You now have a fully functional Airflow integration!
+- To test it: Ensure your containers are up (`python run_live_demo.py`).
+- Navigate to `http://localhost:8081` (Airflow UI). Log in with username: `admin` and password: `sEmA7hUc7F98A2pq`.
+- Find the `sample_lineage_dag`, and click **Trigger DAG**. 
+- Watch your Lineage Engine UI — the nodes from Airflow will appear instantly!
+
+Whenever you are ready to proceed with the next stage, such as **Stage 10 (Column-Level Lineage)**, let me know!
