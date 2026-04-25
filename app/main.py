@@ -1,5 +1,6 @@
 import os
 import socket
+import urllib.request
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -44,13 +45,33 @@ def _tcp_probe(host: str, port: int, timeout: float = 2.0) -> bool:
         return False
 
 
+def _neo4j_http_probe(host: str = "127.0.0.1", port: int = 7474, timeout: float = 3.0) -> bool:
+    """
+    Check Neo4j readiness via HTTP on port 7474.
+
+    Why HTTP 7474 and NOT TCP 7687?
+    - Port 7687 (Bolt) opens ~30s BEFORE Neo4j can serve queries.
+      A TCP probe on 7687 returns True while the engine is still booting — a false positive.
+    - Port 7474 (Neo4j HTTP browser) only returns HTTP 200 when the full
+      server is initialized and ready to accept Bolt connections.
+    - So 7474 = accurate readiness signal. 7687 = premature open.
+    """
+    try:
+        with urllib.request.urlopen(f"http://{host}:{port}/", timeout=timeout):
+            return True
+    except Exception:
+        return False
+
+
 @app.get("/health", tags=["system"])
 def health_check():
     """
-    Lightweight health check using raw TCP probes.
-    Does NOT create DB driver sessions — avoids hangs and cache issues.
+    Lightweight health check.
+    - Neo4j: HTTP probe on port 7474 (accurate — only 200 when fully ready)
+    - Postgres: TCP probe on port 5432
+    Does NOT create DB driver sessions — avoids hangs and lru_cache issues.
     """
-    neo4j_ok = _tcp_probe("127.0.0.1", 7687)
+    neo4j_ok = _neo4j_http_probe()
     postgres_ok = _tcp_probe("127.0.0.1", 5432)
 
     status = {

@@ -12,10 +12,14 @@ services:
     volumes:
       - neo4j_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u neo4j -p lineage_password 'RETURN 1' || exit 1"]
+      # wget on port 7474 (Neo4j HTTP browser) — returns 200 only when Neo4j is
+      # fully initialized and ready to serve Bolt queries.
+      # Using wget because it's built into the neo4j:5.15.0 image.
+      # cypher-shell was crashing the container (exit 1 when neo4j already running).
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 15
+      retries: 18
       start_period: 30s
 
   postgres:

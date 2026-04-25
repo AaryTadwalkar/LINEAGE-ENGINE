@@ -6,6 +6,11 @@ import sys
 import os
 import time
 
+# Fix Windows Unicode encoding so ✅ ❌ emojis print correctly
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dotenv import load_dotenv
