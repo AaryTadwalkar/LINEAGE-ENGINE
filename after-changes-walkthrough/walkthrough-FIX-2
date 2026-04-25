@@ -33,16 +33,23 @@ When called, it:
 #### Change 3: Adding Integration Tests (`test_stage7.py`)
 We also added `scripts/test_stage7.py` to ensure the endpoint works correctly against a seeded dummy graph, verifying that only downstream nodes are returned and independent pipelines are ignored.
 
+#### Change 4: Frontend UI Integration (`NodeSidePanel.jsx`)
+To make this feature instantly usable, we integrated it directly into the React UI.
+- We updated `frontend/src/api/lineageApi.js` to connect to the new `/impact` endpoint.
+- We modified `frontend/src/components/NodeSidePanel.jsx` so that whenever you click on a **Dataset** node, a new **Impact Analysis** section appears at the bottom.
+- This section includes a "Calculate Downstream Impact" button. Clicking it calls the backend and displays an inline alert box showing the Impact Score, the Affected Jobs, and the Affected Datasets.
+
 ## 3. How we tackled it
 
 1.  **Modified `app/api/pydantic_models.py`**: Added the `ImpactResponse` model.
 2.  **Modified `app/api/router.py`**: Imported the model and implemented the `/impact/` route logic.
 3.  **Created `scripts/test_stage7.py`**: Built a new integration test script to lock in the correctness of the endpoint.
+4.  **Updated `frontend/src/api/lineageApi.js` & `NodeSidePanel.jsx`**: Built the React UI components to trigger and display the analysis.
 
 ## Next Steps
 
-Now you have a powerful backend API to power the Impact Analysis feature!
-- You can test it locally by starting the server and hitting `http://localhost:8000/docs` (Swagger UI) to try the `/lineage/impact/` endpoint.
-- The frontend team can now build a UI view that calls this endpoint to warn users before they make destructive schema changes.
+Now you have a powerful Impact Analysis feature that works end-to-end!
+- You can test it locally by ensuring your backend is running with the latest code (e.g., restart `python run_live_demo.py` if it was already running).
+- Open the UI, click on any **Blue Dataset Node**, and click the **Calculate Downstream Impact** button in the side panel.
 
 Whenever you are ready to proceed with the next stage, such as **Stage 8 (Multi-Hop Retroactive PII Propagation)**, let me know!
