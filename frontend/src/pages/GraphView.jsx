@@ -17,6 +17,7 @@ export const GraphView = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPolling, setIsPolling] = useState(false);   // silent background refresh
   const [error, setError] = useState(null);
+  const [emptyResult, setEmptyResult] = useState(null);
   const [activeNode, setActiveNode] = useState(null);
   const [activeJobRuns, setActiveJobRuns] = useState(null);
 
@@ -29,6 +30,7 @@ export const GraphView = () => {
     if (!silent) {
       setIsLoading(true);
       setError(null);
+      setEmptyResult(null);
       setActiveNode(null);
       setActiveJobRuns(null);
     } else {
@@ -51,9 +53,11 @@ export const GraphView = () => {
       setEdges(data.edges || []);
 
       if (!silent && (!data.nodes || data.nodes.length === 0)) {
-        setError('No lineage nodes found for this dataset yet.');
+        setEmptyResult(`No ${direction} lineage found for this dataset. It may be a ${direction === 'downstream' ? 'final destination' : 'raw source'}.`);
+        setError(null);
       } else {
         setError(null);
+        setEmptyResult(null);
       }
     } catch (err) {
       if (!silent) {
@@ -64,6 +68,7 @@ export const GraphView = () => {
         }
         setNodes([]);
         setEdges([]);
+        setEmptyResult(null);
       }
     } finally {
       if (!silent) setIsLoading(false);
@@ -163,6 +168,13 @@ export const GraphView = () => {
           <div className="absolute top-28 left-1/2 -translate-x-1/2 z-50 bg-red-950/80 border border-red-500/50 text-red-200 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 backdrop-blur-md max-w-xl">
             <AlertCircle size={24} className="text-red-400 flex-shrink-0" />
             <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Empty Result Info Card */}
+        {emptyResult && (
+          <div className="absolute top-28 left-1/2 -translate-x-1/2 z-50 bg-blue-950/80 border border-blue-500/50 text-blue-200 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 backdrop-blur-md max-w-xl text-center">
+            <p className="text-sm font-medium">{emptyResult}</p>
           </div>
         )}
 

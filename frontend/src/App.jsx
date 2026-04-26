@@ -4,6 +4,7 @@ import { Sidebar } from './components/Sidebar';
 import { GraphView } from './pages/GraphView';
 import { DirectoryView } from './pages/DirectoryView';
 import { SystemRunsView } from './pages/SystemRunsView';
+import { ColumnGraphView } from './pages/ColumnGraphView';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/" element={<GraphView />} />
             <Route path="/directory" element={<DirectoryView />} />
             <Route path="/system-runs" element={<SystemRunsView />} />
+            <Route path="/column-graph" element={<ColumnGraphView />} />
           </Routes>
         </main>
       </div>

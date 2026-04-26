@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Columns, ArrowUpLeft, AlertTriangle, Loader2, ChevronRight } from 'lucide-react';
+import { X, Columns, ArrowUpLeft, ArrowDownRight, Loader2, ChevronRight, Maximize2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { getDatasetColumns, getColumnUpstream, getColumnImpact } from '../api/lineageApi';
 
 /**
@@ -17,6 +18,8 @@ export const ColumnPanel = ({ datasetUri, onClose }) => {
   const [traceMode, setTraceMode]     = useState(null);  // "upstream" | "impact"
   const [traceData, setTraceData]     = useState(null);
   const [traceLoading, setTraceLoading] = useState(false);
+  
+  const navigate = useNavigate();
 
   // Load columns on mount / dataset change
   useEffect(() => {
@@ -66,9 +69,18 @@ export const ColumnPanel = ({ datasetUri, onClose }) => {
           <Columns size={18} className="text-cyan-400" />
           Column Lineage
         </h2>
-        <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-md transition-colors">
-          <X size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            title="Open as Graph" 
+            onClick={() => navigate(`/column-graph?dataset=${encodeURIComponent(datasetUri)}`)}
+            className="p-1 text-cyan-400 hover:bg-cyan-500/20 rounded-md transition-colors"
+          >
+            <Maximize2 size={16} />
+          </button>
+          <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-md transition-colors">
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Dataset URI badge */}
@@ -128,26 +140,32 @@ export const ColumnPanel = ({ datasetUri, onClose }) => {
                       <button
                         title="Trace upstream sources of this column"
                         onClick={() => handleTrace(col, 'upstream')}
-                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
                           isSelected && traceMode === 'upstream'
                             ? 'bg-blue-500/40 text-blue-200 border border-blue-400/40'
                             : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20'
                         }`}
                       >
-                        <ArrowUpLeft size={10} className="inline mr-0.5" />
+                        <ArrowUpLeft size={10} />
                         Upstream
+                        {isSelected && traceMode === 'upstream' && !traceLoading && (
+                          <span className="bg-blue-900/60 px-1 rounded-sm">{traceList.length}</span>
+                        )}
                       </button>
                       <button
-                        title="See what this column impacts downstream"
+                        title="Trace downstream consumers of this column"
                         onClick={() => handleTrace(col, 'impact')}
-                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
                           isSelected && traceMode === 'impact'
                             ? 'bg-orange-500/40 text-orange-200 border border-orange-400/40'
                             : 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border border-orange-500/20'
                         }`}
                       >
-                        <AlertTriangle size={10} className="inline mr-0.5" />
-                        Impact
+                        <ArrowDownRight size={10} />
+                        Downstream
+                        {isSelected && traceMode === 'impact' && !traceLoading && (
+                          <span className="bg-orange-900/60 px-1 rounded-sm">{traceList.length}</span>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -162,7 +180,7 @@ export const ColumnPanel = ({ datasetUri, onClose }) => {
           <div className="mx-4 mb-4 rounded-xl border border-white/10 bg-black/30">
             <div className="px-4 py-3 border-b border-white/5">
               <div className="text-[10px] uppercase font-bold tracking-wider text-gray-400">
-                {traceMode === 'upstream' ? '← Upstream Sources' : '→ Downstream Impact'}
+                {traceMode === 'upstream' ? '← Upstream Sources' : '→ Downstream Consumers'}
               </div>
               <div className="text-xs font-mono text-cyan-300/70 mt-0.5">{selectedCol.name}</div>
             </div>

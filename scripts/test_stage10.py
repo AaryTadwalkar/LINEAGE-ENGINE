@@ -41,10 +41,10 @@ def check(name, cond, got=None):
         FAILED.append(name)
 
 
-def wipe_db():
+def wipe_db(prefix: str):
     driver = get_neo4j_driver()
     with driver.session() as s:
-        s.run("MATCH (n) DETACH DELETE n")
+        s.run("MATCH (n) WHERE n.uri STARTS WITH $prefix DETACH DELETE n", prefix=prefix)
     conn = get_postgres_conn()
     with conn.cursor() as cur:
         cur.execute("DELETE FROM run_log")
@@ -60,7 +60,7 @@ def seed_graph():
     This creates a 2-hop column chain:
       raw_customers/id → stg_customers/customer_id → customers/customer_id
     """
-    NS = "duckdb://jaffle_shop"
+    NS = "duckdb://lineage_test"
     now = datetime.now(timezone.utc).isoformat()
 
     # Event 1: raw_customers → stg_customers
@@ -125,14 +125,14 @@ def seed_graph():
     assert r2.status_code == 200, f"Seed event 2 failed: {r2.text}"
 
 
+NS = "duckdb://lineage_test"
+
 # ── Setup ─────────────────────────────────────────────────────────────────────
-print("Wiping DB...")
-wipe_db()
+print("Wiping test DB namespace...")
+wipe_db(NS)
 print("Seeding test graph with column lineage facets...")
 seed_graph()
 time.sleep(0.5)
-
-NS = "duckdb://jaffle_shop"
 
 
 # ═════════════════════════════════════════════════════════════════════════════

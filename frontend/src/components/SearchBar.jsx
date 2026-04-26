@@ -4,15 +4,26 @@ import { Search, ArrowUp, ArrowDown, Layers } from 'lucide-react';
 export const SearchBar = ({ onSearch, isLoading, initialValue = '' }) => {
   const [uri, setUri] = useState(initialValue || '');
   const [depth, setDepth] = useState(5);
+  const [emptyWarning, setEmptyWarning] = useState(false);
 
   const handleUpstream = (e) => {
     e.preventDefault();
-    if (uri.trim()) onSearch(uri.trim(), depth, 'upstream');
+    if (!uri.trim()) {
+      setEmptyWarning(true);
+      return;
+    }
+    setEmptyWarning(false);
+    onSearch(uri.trim(), depth, 'upstream');
   };
 
   const handleDownstream = (e) => {
     e.preventDefault();
-    if (uri.trim()) onSearch(uri.trim(), depth, 'downstream');
+    if (!uri.trim()) {
+      setEmptyWarning(true);
+      return;
+    }
+    setEmptyWarning(false);
+    onSearch(uri.trim(), depth, 'downstream');
   };
 
   return (
@@ -24,13 +35,26 @@ export const SearchBar = ({ onSearch, isLoading, initialValue = '' }) => {
             <input
               type="text"
               value={uri}
-              onChange={(e) => setUri(e.target.value)}
+              onChange={(e) => {
+                setUri(e.target.value);
+                if (e.target.value.trim()) setEmptyWarning(false);
+              }}
               onKeyDown={(e) => e.key === 'Enter' && handleUpstream(e)}
               placeholder="Enter Dataset URI (e.g. duckdb://jaffle_shop/customers)"
-              className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-mono"
+              className={`w-full bg-black/30 border rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all font-mono ${
+                emptyWarning 
+                  ? 'border-amber-500/50 focus:ring-amber-500/50' 
+                  : 'border-white/10 focus:ring-blue-500/50 focus:border-blue-500/50'
+              }`}
             />
           </div>
         </div>
+
+        {emptyWarning && (
+          <div className="text-xs text-amber-400/90 font-medium px-2 py-0.5">
+            Please enter a Dataset URI first
+          </div>
+        )}
         
         <div className="flex items-center justify-between gap-4 px-1">
           <div className="flex items-center gap-3 bg-black/20 px-3 py-1.5 rounded-lg border border-white/5">

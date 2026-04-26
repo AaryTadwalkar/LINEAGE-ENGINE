@@ -7,7 +7,7 @@ Run this single file to start everything:
   3. Vite/React frontend (port 5173)
   4. Auto-opens the dashboard in your browser
   5. Streams the pipeline from `pipeline_plugin.py` to the engine live
-  6. Runs integrated Stage 6-9 validation tests after the simulation
+  6. Runs integrated Stage 6-10 validation tests after the simulation
 
 Edit `pipeline_plugin.py` to switch to a different pipeline.
 
@@ -247,7 +247,7 @@ def run_stage_tests():
     Called automatically after the pipeline simulation completes.
     """
     print("\n" + "=" * 60)
-    print("[TEST SUITE]  Running Stage 6-9 Validation Tests")
+    print("[TEST SUITE]  Running Stage 6-10 Validation Tests")
     print("=" * 60)
 
     results = {}
@@ -303,6 +303,11 @@ def run_stage_tests():
     except Exception as e:
         print(f"  ❌ FAIL: {e}")
         results["Stage 9 (Airflow Endpoint)"] = False
+
+    # ── Stage 10: Column-Level Lineage ────────────────────────────────────
+    print()
+    passed_10 = _run_test_script("test_stage10.py")
+    results["Stage 10 (Column Lineage)"] = passed_10
 
     # ── Final Summary ──────────────────────────────────────────────────────
     print("\n" + "=" * 60)
@@ -373,7 +378,7 @@ def main():
     print()
 
     # 4. Run integrated tests FIRST (these wipe the DB to assert cleanly)
-    print("--> [4/5] Running Stage 6-9 Tests...")
+    print("--> [4/5] Running Stage 6-10 Tests...")
     run_stage_tests()
 
     # 5. Start simulator in background — runs all pipeline jobs
