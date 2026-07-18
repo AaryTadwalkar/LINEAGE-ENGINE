@@ -46,7 +46,7 @@ from pipeline_plugin import (
 )
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-API_BASE = "http://localhost:8000"
+API_BASE = "http://127.0.0.1:8000"
 FRONTEND_URL = "http://localhost:5173"
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend")

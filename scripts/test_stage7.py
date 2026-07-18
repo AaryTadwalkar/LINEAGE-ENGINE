@@ -23,7 +23,7 @@ from app.models import LineageEvent, JobRef, RunRef, DatasetRef
 from app.storage.graph_writer import write_event
 from app.db_client import get_neo4j_driver, get_postgres_conn
 
-BASE = "http://localhost:8000"
+BASE = "http://127.0.0.1:8000"
 PASSED = []
 FAILED = []
 

@@ -27,7 +27,7 @@ from urllib.parse import quote
 from datetime import datetime, timezone
 from app.db_client import get_neo4j_driver, get_postgres_conn
 
-BASE = "http://localhost:8000"
+BASE = "http://127.0.0.1:8000"
 PASSED = []
 FAILED = []
 
